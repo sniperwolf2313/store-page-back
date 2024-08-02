@@ -1,9 +1,11 @@
 export class Delivery {
-  constructor(
-    public readonly deliveryId: string,
-    public readonly transactionId: string,
-    public readonly deliveryAddress: string,
-    public readonly status: string,
-    public readonly deliveryDate: Date,
-  ) {}
+  deliveryId: string;
+  transactionId: string;
+  customerId: string;
+  address_line1: string;
+  address_line2: string;
+  country: string;
+  city: string;
+  status: string;
+  deliveryDate: Date;
 }
