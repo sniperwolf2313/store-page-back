@@ -41,6 +41,14 @@ export class TransactionDbAdapter {
     transactionId: string,
     status: string,
   ): Promise<Transaction> {
+    if (!transactionId) {
+      throw new Error('Transaction ID is required');
+    }
+
+    if (!status) {
+      throw new Error('Status is required');
+    }
+
     const params = {
       TableName: 'Transactions',
       Key: {
@@ -55,6 +63,9 @@ export class TransactionDbAdapter {
       },
       ReturnValues: 'ALL_NEW',
     };
+
+    console.log('DynamoDB update params:', params);
+
     const command = new UpdateCommand(params as UpdateCommandInput);
     const result = await this.dynamoDBClient.send(command);
     return result.Attributes as Transaction;
