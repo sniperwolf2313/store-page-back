@@ -64,8 +64,6 @@ export class TransactionDbAdapter {
       ReturnValues: 'ALL_NEW',
     };
 
-    console.log('DynamoDB update params:', params);
-
     const command = new UpdateCommand(params as UpdateCommandInput);
     const result = await this.dynamoDBClient.send(command);
     return result.Attributes as Transaction;
