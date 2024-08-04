@@ -1,6 +1,11 @@
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  PutCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { Inject, Injectable } from '@nestjs/common';
 import { Customer } from 'src/domain/entities/customer.entity';
+import { Result } from 'src/utils/result';
 
 @Injectable()
 export class CustomerDbAdapter {
@@ -9,13 +14,18 @@ export class CustomerDbAdapter {
     private readonly dynamoDBClient: DynamoDBDocumentClient,
   ) {}
 
-  async createCustomerDB(customer: Customer): Promise<Customer> {
-    const params = {
+  async createCustomerDB(customer: Customer): Promise<Result<Customer>> {
+    const params: PutCommandInput = {
       TableName: 'Customers',
       Item: customer,
     };
     const command = new PutCommand(params);
-    await this.dynamoDBClient.send(command);
-    return customer;
+
+    try {
+      await this.dynamoDBClient.send(command);
+      return Result.ok(customer);
+    } catch (error) {
+      return Result.fail(new Error('Failed to create customer in DB'));
+    }
   }
 }
