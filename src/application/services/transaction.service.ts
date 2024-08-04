@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { CustomerService } from './customer.service';
 import { DeliveryService } from './delivery.service';
+import { Result } from 'src/utils/result';
 
 @Injectable()
 export class TransactionService {
@@ -15,29 +16,82 @@ export class TransactionService {
     private readonly customerService: CustomerService,
     private readonly deliveryService: DeliveryService,
   ) {}
-  async createTransactionDB(transaction: Transaction): Promise<Transaction> {
-    return this.transactionDbAdapter.createTransactionDB(transaction);
+
+  async createTransactionDB(
+    transaction: Transaction,
+  ): Promise<Result<Transaction>> {
+    try {
+      const result =
+        await this.transactionDbAdapter.createTransactionDB(transaction);
+      return result;
+    } catch (error) {
+      return Result.fail<Transaction>(error as Error);
+    }
   }
-  async getTransactionDB(transactionId: string): Promise<Transaction> {
-    return this.transactionDbAdapter.getTransactionDB(transactionId);
+
+  async getTransactionDB(transactionId: string): Promise<Result<Transaction>> {
+    try {
+      const result =
+        await this.transactionDbAdapter.getTransactionDB(transactionId);
+      if (result) {
+        return result;
+      } else {
+        return Result.fail<Transaction>(new Error('Transaction not found'));
+      }
+    } catch (error) {
+      return Result.fail<Transaction>(error as Error);
+    }
   }
   async updateTransactionDB(
     transactionId: string,
     status: string,
-  ): Promise<Transaction> {
-    return this.transactionDbAdapter.updateTransactionDB(transactionId, status);
-  }
-  async getAcceptanceToken() {
-    return this.payService.getTokenMerchant();
+  ): Promise<Result<Transaction>> {
+    try {
+      const result = await this.transactionDbAdapter.updateTransactionDB(
+        transactionId,
+        status,
+      );
+      if (result.isSuccess) {
+        return Result.ok(result.value);
+      } else {
+        return Result.fail<Transaction>(
+          new Error('Failed to update transaction'),
+        );
+      }
+    } catch (error) {
+      return Result.fail<Transaction>(error as Error);
+    }
   }
 
-  async getTokenCard(cardData: any) {
-    return this.payService.getTokenCard(cardData);
+  async getAcceptanceToken(): Promise<Result<string>> {
+    try {
+      const response = await this.payService.getTokenMerchant();
+      return Result.ok(response.data);
+    } catch (error) {
+      return Result.fail<string>(error as Error);
+    }
   }
-  async getPaymentSource(paymentSourceData: any) {
-    return this.payService.getPaymentSource(paymentSourceData);
+
+  async getTokenCard(cardData: any): Promise<Result<string>> {
+    try {
+      const response = await this.payService.getTokenCard(cardData);
+      return Result.ok(response.data);
+    } catch (error) {
+      return Result.fail<string>(error as Error);
+    }
   }
-  async createTransaction(transactionData: any) {
+
+  async getPaymentSource(paymentSourceData: any): Promise<Result<any>> {
+    try {
+      const response =
+        await this.payService.getPaymentSource(paymentSourceData);
+      return Result.ok(response.data);
+    } catch (error) {
+      return Result.fail<any>(error as Error);
+    }
+  }
+
+  async createTransaction(transactionData: any): Promise<Result<string>> {
     try {
       transactionData.reference = uuidv4();
       const amountInCents = transactionData.amount_in_cents.toString();
@@ -50,46 +104,69 @@ export class TransactionService {
       );
 
       const response = await this.payService.createTransaction(transactionData);
-
       if (!response.data) {
-        throw new Error('Response data is missing');
+        return Result.fail<string>(new Error('Response data is missing'));
       }
 
-      console.log('Response data:', response.data);
+      const transactionResult = await this.createTransactionDB({
+        transactionId: response.data.id,
+        reference: response.data.reference,
+        amountInCents: response.data.amount_in_cents,
+        currency: response.data.currency,
+        customerId: response.data.customer_data.legal_id,
+        customerEmail: response.data.customer_email,
+        paymentMethod: response.data.payment_method,
+        status: response.data.status,
+      });
 
-      if ('status' in response.data) {
-        await this.createTransactionDB({
-          transactionId: response.data.id,
-          reference: response.data.reference,
-          amountInCents: response.data.amount_in_cents,
-          currency: response.data.currency,
-          customerId: response.data.customer_data.legal_id,
-          customerEmail: response.data.customer_email,
-          paymentMethod: response.data.payment_method,
-          status: response.data.status,
-        });
-      } else {
-        throw new Error('Status not found in response data');
+      if (!transactionResult.isSuccess) {
+        return Result.fail<string>(
+          new Error('Failed to create transaction DB entry'),
+        );
       }
 
-      let responseStatus = await this.getStatus(response.data.id);
+      let responseStatusResult = await this.getStatus(response.data.id);
+      if (!responseStatusResult.isSuccess) {
+        return Result.fail<string>(
+          new Error('Failed to retrieve transaction status'),
+        );
+      }
+
+      let responseStatus = responseStatusResult.value;
       let tries = 0;
-      while (responseStatus.status === 'PENDING' && tries < 10) {
+      while (responseStatus === 'PENDING' && tries < 10) {
         tries++;
-        responseStatus = await this.getStatus(response.data.id);
+        responseStatusResult = await this.getStatus(response.data.id);
+        if (!responseStatusResult.isSuccess) {
+          return Result.fail<string>(
+            new Error('Failed to retrieve transaction status'),
+          );
+        }
+        responseStatus = responseStatusResult.value;
       }
 
+      console.log('Tries:', tries);
       console.log('Transaction ID:', response.data.id);
-      console.log('Response Status:', responseStatus.status);
+      console.log('Response Status:', responseStatus);
 
-      if (responseStatus.status !== 'PENDING') {
-        if (!response.data.id || !responseStatus.status) {
-          throw new Error('Missing data for updating transaction DB');
+      if (responseStatus !== 'PENDING') {
+        if (!response.data.id || !responseStatus) {
+          return Result.fail<string>(
+            new Error('Missing data for updating transaction DB'),
+          );
         }
 
-        await this.updateTransactionDB(response.data.id, responseStatus.status);
+        const updateResult = await this.updateTransactionDB(
+          response.data.id,
+          responseStatus,
+        );
+        if (!updateResult.isSuccess) {
+          return Result.fail<string>(
+            new Error('Failed to update transaction status'),
+          );
+        }
 
-        await this.customerService.createCustomerDB({
+        const customerResult = await this.customerService.createCustomerDB({
           customerId: response.data.customer_data.legal_id,
           idType: response.data.customer_data.legal_id_type,
           name: response.data.customer_data.full_name,
@@ -98,28 +175,58 @@ export class TransactionService {
           deliveryAddress: response.data.shipping_address,
         });
 
-        await this.deliveryService.createDeliveryDB({
-          deliveryId: response.data.id,
-          shippingData: response.data.shipping_address,
-          status: responseStatus.status,
-        });
-      } else {
-        if (!response.data.id) {
-          throw new Error('Missing data for updating transaction DB');
+        if (!customerResult.isSuccess) {
+          return Result.fail<string>(
+            new Error('Failed to create customer DB entry'),
+          );
         }
 
-        await this.updateTransactionDB(response.data.id, 'ERROR');
+        const deliveryResult = await this.deliveryService.createDeliveryDB({
+          deliveryId: response.data.id,
+          shippingData: response.data.shipping_address,
+          status: responseStatus,
+        });
+
+        if (!deliveryResult.isSuccess) {
+          return Result.fail<string>(
+            new Error('Failed to create delivery DB entry'),
+          );
+        }
+      } else {
+        if (!response.data.id) {
+          return Result.fail<string>(
+            new Error('Missing data for updating transaction DB'),
+          );
+        }
+
+        const updateErrorResult = await this.updateTransactionDB(
+          response.data.id,
+          'ERROR',
+        );
+        if (!updateErrorResult.isSuccess) {
+          return Result.fail<string>(
+            new Error('Failed to update transaction status to ERROR'),
+          );
+        }
       }
-      return responseStatus.status;
+
+      return Result.ok(responseStatus);
     } catch (error) {
       console.error('Error creating transaction:', error);
-      throw error;
+      return Result.fail<string>(error as Error);
     }
   }
 
-  async getStatus(transactionId: string) {
-    const response = await this.payService.getStatus(transactionId);
-    return response.data;
+  async getStatus(transactionId: string): Promise<Result<string>> {
+    try {
+      const response = await this.payService.getStatus(transactionId);
+      if (!response.data) {
+        return Result.fail<string>(new Error('Response data is missing'));
+      }
+      return Result.ok(response.data.status);
+    } catch (error) {
+      return Result.fail<string>(error as Error);
+    }
   }
 
   private generateSignature(
