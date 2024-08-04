@@ -1,18 +1,46 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { ProductService } from '../application/services/product.service';
+import { Product } from '../domain/entities/product.entity';
+import { Result } from '../utils/result';
 
 @Controller('products')
 export class ProductController {
-  constructor(private productService: ProductService) {}
+  constructor(private readonly productService: ProductService) {}
 
   @Get()
   async getAllProducts() {
-    return await this.productService.getAllProducts();
+    const result: Result<Product[]> =
+      await this.productService.getAllProducts();
+    if (result.isSuccess) {
+      return result.value;
+    } else {
+      throw new HttpException(
+        result.error?.message || 'Failed to retrieve products',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get(':id')
   async getProduct(@Param('id') productId: string) {
-    return await this.productService.getProduct(productId);
+    const result: Result<Product> =
+      await this.productService.getProduct(productId);
+    if (result.isSuccess) {
+      return result.value;
+    } else {
+      throw new HttpException(
+        result.error?.message || 'Product not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   @Patch(':id')
@@ -20,6 +48,17 @@ export class ProductController {
     @Param('id') productId: string,
     @Body('stock') stock: number,
   ) {
-    return await this.productService.updateProduct(productId, stock);
+    const result: Result<Product> = await this.productService.updateProduct(
+      productId,
+      stock,
+    );
+    if (result.isSuccess) {
+      return result.value;
+    } else {
+      throw new HttpException(
+        result.error?.message || 'Failed to update product',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
   }
 }
