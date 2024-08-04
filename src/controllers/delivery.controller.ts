@@ -1,6 +1,13 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { DeliveryService } from '../application/services/delivery.service';
 import { Delivery } from '../domain/entities/delivery.entity';
+import { Result } from '../utils/result';
 
 @Controller('delivery')
 export class DeliveryController {
@@ -8,6 +15,15 @@ export class DeliveryController {
 
   @Post('create')
   async createDeliveryDB(@Body() delivery: Delivery) {
-    return this.deliveryService.createDeliveryDB(delivery);
+    const result: Result<Delivery> =
+      await this.deliveryService.createDeliveryDB(delivery);
+    if (result.isSuccess) {
+      return result.value;
+    } else {
+      throw new HttpException(
+        result.error.message,
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
   }
 }
