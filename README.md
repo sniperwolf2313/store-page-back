@@ -1,73 +1,143 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# StorePage-Back
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este proyecto es el backend de una aplicación de pagos para una tienda, desarrollado con NestJS. Gestiona productos, procesamientos de pago mediante la API, y maneja datos de usuarios y transacciones.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tabla de Contenidos
 
-## Description
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Ejecución](#ejecución)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Scripts Disponibles](#scripts-disponibles)
+- [Documentación de la API](#documentación-de-la-api)
+- [Pruebas](#pruebas)
+- [Diseño del modelo de datos](#diseño-del-modelo-de-datos)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Requisitos Previos
 
-## Installation
+Antes de comenzar, asegúrate de tener instalados los siguientes programas:
 
-```bash
-$ npm install
-```
+- [Node.js](https://nodejs.org/) (v14 o superior)
+- [npm](https://www.npmjs.com/) (v6 o superior) o [Yarn](https://yarnpkg.com/)
+- [NestJS CLI](https://docs.nestjs.com/cli/overview) (opcional, pero recomendado)
+- Una cuenta en [AWS](https://aws.amazon.com/) para el uso de DynamoDB y S3.
 
-## Running the app
+## Instalación
+
+Clona este repositorio y navega al directorio del proyecto:
 
 ```bash
-# development
-$ npm run start
+git clone https://github.com/tu-usuario/storepage-back.git
+cd storepage-back
 
-# watch mode
-$ npm run start:dev
+```
+### Instala las dependencias:
 
-# production mode
-$ npm run start:prod
+`npm install` o `yarn install`
+
+
+## Configuración
+
+Configura las variables de entorno. Crea un archivo .env en la raíz del proyecto y añade las siguientes variables:
+```
+PORT=
+API_URL=
+PUBLIC_KEY=
+PRIVATE_KEY=
+EVENTS_KEY=
+INTEGRITY_KEY=
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
 ```
 
-## Test
+## Ejecución
 
+Para ejecutar el servidor en modo de desarrollo:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
+# o
+yarn start:dev
 ```
+El servidor estará disponible en http://localhost:3000.
 
-## Support
+## Estructura del proyecto
+esternocleidomastoideo 
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Scripts disponibles
+Los siguientes scripts están disponibles en el proyecto:
 
-## Stay in touch
+- `start`: Inicia el servidor en modo de producción.
+- `start:dev`: Inicia el servidor en modo de desarrollo con recarga en caliente.
+- `start:debug`: Inicia el servidor en modo de depuración.
+- `test`: Ejecuta todas las pruebas.
+- `test:watch`: Ejecuta las pruebas en modo observador.
+- `test:cov`: Genera un reporte de cobertura de pruebas.
+- `lint`: Ejecuta el linter para el código fuente.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Documentación de la API
+### Importar la Colección en Postman
 
-## License
+1. **Link para descargar la colección:**
+- [Descarga Aqui 'ENDPOINTS STOREPAGE'](https://drive.google.com/file/d/1D7ttKkRLVFJK3c51pxbGSuAmWvioZzGV/view?usp=sharing)
 
-Nest is [MIT licensed](LICENSE).
+## Pruebas
+
+## Diseño del modelo de datos
+
+### Products:
+
+La tabla `Products` almacena la información de los productos disponibles en la tienda. A continuación se describen los campos de esta tabla:
+
+| **Campo**        | **Tipo de Dato** | **Descripción**                                     |
+|------------------|------------------|-----------------------------------------------------|
+| `productId`      | String           | Identificador único del producto.                   |
+| `productName`    | String           | Nombre del producto.                                |
+| `price`          | Number           | Precio del producto.                                |
+| `description`    | String           | Descripción del producto.                           |
+| `stock`          | Number           | Cantidad de producto disponible en inventario.      |
+| `imageURL`       | String           | URL de la imagen del producto (almacenada en S3).   |
+
+### Customers:
+
+La tabla `Customers` almacena la información de los clientes que utilizan la tienda. A continuación se describen los campos de esta tabla:
+
+| **Campo**           | **Tipo de Dato** | **Descripción**                                      |
+|---------------------|------------------|------------------------------------------------------|
+| `customerId`        | String           | Identificador único del cliente.                     |
+| `idType`            | String           | Tipo de identificación del cliente (por ejemplo, DNI, pasaporte). |
+| `name`              | String           | Nombre completo del cliente.                         |
+| `email`             | String           | Correo electrónico del cliente.                      |
+| `phone_number`      | String           | Número de teléfono del cliente.                      |
+| `deliveryAddress`   | String           | Dirección de entrega del cliente.                    |
+
+### Delivery:
+
+La tabla `Deliveries` almacena la información de las entregas de productos a los clientes. A continuación se describen los campos de esta tabla:
+
+| **Campo**        | **Tipo de Dato** | **Descripción**                                      |
+|------------------|------------------|------------------------------------------------------|
+| `deliveryId`     | String           | Identificador único de la entrega.                   |
+| `shippingData`   | Any              | Datos de envío, puede incluir detalles como el transportista, tiempo estimado de entrega, etc. |
+| `status`         | String           | Estado de la entrega (por ejemplo, pendiente, en tránsito, entregado, cancelado). |
+
+
+### Transaction:
+
+La tabla `Transactions` almacena la información de las transacciones realizadas por los clientes en la tienda. A continuación se describen los campos de esta tabla:
+
+| **Campo**         | **Tipo de Dato** | **Descripción**                                      |
+|-------------------|------------------|------------------------------------------------------|
+| `transactionId`   | String           | Identificador único de la transacción.               |
+| `reference`       | String           | Referencia de la transacción (por ejemplo, número de orden). |
+| `amountInCents`   | Number           | Monto de la transacción en centavos.                 |
+| `currency`        | String           | Moneda utilizada en la transacción (por ejemplo, COP). |
+| `customerId`      | Any              | Identificador del cliente que realizó la transacción. |
+| `customerEmail`   | String           | Correo electrónico del cliente.                      |
+| `paymentMethod`   | Any              | Método de pago utilizado (por ejemplo, tarjeta de crédito, transferencia bancaria). |
+| `status`          | String           | Estado de la transacción (por ejemplo, pendiente, completada, fallida). |
+
+### Uso de S3 para Almacenamiento de Imágenes
+Las imágenes de los productos se almacenan en un bucket de S3. La URL de la imagen se guarda en la tabla de productos en DynamoDB.

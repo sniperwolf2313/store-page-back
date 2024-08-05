@@ -6,8 +6,8 @@ import {
   UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { Transaction } from 'src/domain/entities/transaction.entity';
-import { Result } from 'src/utils/result';
+import { Transaction } from '../domain/entities/transaction.entity';
+import { Result } from '../utils/result';
 
 @Injectable()
 export class TransactionDbAdapter {

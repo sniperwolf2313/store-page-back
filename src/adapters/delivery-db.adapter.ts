@@ -4,8 +4,8 @@ import {
   PutCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { Delivery } from 'src/domain/entities/delivery.entity';
-import { Result } from 'src/utils/result';
+import { Delivery } from '../domain/entities/delivery.entity';
+import { Result } from '../utils/result';
 
 @Injectable()
 export class DeliveryDbAdapter {

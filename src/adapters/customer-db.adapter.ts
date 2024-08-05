@@ -4,8 +4,8 @@ import {
   PutCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { Inject, Injectable } from '@nestjs/common';
-import { Customer } from 'src/domain/entities/customer.entity';
-import { Result } from 'src/utils/result';
+import { Customer } from '../domain/entities/customer.entity';
+import { Result } from '../utils/result';
 
 @Injectable()
 export class CustomerDbAdapter {

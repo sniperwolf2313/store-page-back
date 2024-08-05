@@ -9,8 +9,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { TransactionService } from '../application/services/transaction.service';
-import { Transaction } from 'src/domain/entities/transaction.entity';
-import { Result } from 'src/utils/result';
+import { Transaction } from '../domain/entities/transaction.entity';
+import { Result } from '../utils/result';
 
 @Controller('transactions')
 export class TransactionController {

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionDbAdapter } from '../../adapters/transaction-db.adapter';
-import { Transaction } from 'src/domain/entities/transaction.entity';
+import { Transaction } from '../../domain/entities/transaction.entity';
 import { PayService } from './api-client.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { CustomerService } from './customer.service';
 import { DeliveryService } from './delivery.service';
-import { Result } from 'src/utils/result';
+import { Result } from '../../utils/result';
 
 @Injectable()
 export class TransactionService {
@@ -144,10 +144,6 @@ export class TransactionService {
         }
         responseStatus = responseStatusResult.value;
       }
-
-      console.log('Tries:', tries);
-      console.log('Transaction ID:', response.data.id);
-      console.log('Response Status:', responseStatus);
 
       if (responseStatus !== 'PENDING') {
         if (!response.data.id || !responseStatus) {

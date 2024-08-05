@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CustomerDbAdapter } from '../../adapters/customer-db.adapter';
 import { Customer } from '../../domain/entities/customer.entity';
-import { Result } from 'src/utils/result';
+import { Result } from '../../utils/result';
 
 @Injectable()
 export class CustomerService {
