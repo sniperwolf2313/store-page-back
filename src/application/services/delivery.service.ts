@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DeliveryDbAdapter } from '../../adapters/delivery-db.adapter';
-import { Delivery } from 'src/domain/entities/delivery.entity';
-import { Result } from 'src/utils/result';
+import { Delivery } from '../../domain/entities/delivery.entity';
+import { Result } from '../../utils/result';
 
 @Injectable()
 export class DeliveryService {

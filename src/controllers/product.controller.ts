@@ -23,7 +23,7 @@ export class ProductController {
       return result.value;
     } else {
       throw new HttpException(
-        result.error?.message || 'Failed to retrieve products',
+        result.error.message,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -36,10 +36,7 @@ export class ProductController {
     if (result.isSuccess) {
       return result.value;
     } else {
-      throw new HttpException(
-        result.error?.message || 'Product not found',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(result.error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -56,7 +53,7 @@ export class ProductController {
       return result.value;
     } else {
       throw new HttpException(
-        result.error?.message || 'Failed to update product',
+        result.error.message,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

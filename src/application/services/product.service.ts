@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductDbAdapter } from '../../adapters/product-db.adapter';
-import { Product } from 'src/domain/entities/product.entity';
-import { Result } from 'src/utils/result';
+import { Product } from '../../domain/entities/product.entity';
+import { Result } from '../../utils/result';
 
 @Injectable()
 export class ProductService {
