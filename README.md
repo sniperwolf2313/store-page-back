@@ -8,7 +8,6 @@ Este proyecto es el backend de una aplicación de pagos para una tienda, desarro
 - [Instalación](#instalación)
 - [Configuración](#configuración)
 - [Ejecución](#ejecución)
-- [Estructura del Proyecto](#estructura-del-proyecto)
 - [Scripts Disponibles](#scripts-disponibles)
 - [Documentación de la API](#documentación-de-la-api)
 - [Pruebas](#pruebas)
@@ -63,9 +62,6 @@ yarn start:dev
 ```
 El servidor estará disponible en http://localhost:3000.
 
-## Estructura del proyecto
-esternocleidomastoideo 
-
 ## Scripts disponibles
 Los siguientes scripts están disponibles en el proyecto:
 
@@ -84,6 +80,45 @@ Los siguientes scripts están disponibles en el proyecto:
 - [Descarga Aqui 'ENDPOINTS STOREPAGE'](https://drive.google.com/file/d/1D7ttKkRLVFJK3c51pxbGSuAmWvioZzGV/view?usp=sharing)
 
 ## Pruebas
+
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |   75.48 |    64.81 |   91.93 |   75.87 |                   
+ src                        |       0 |      100 |       0 |       0 |                   
+  app.module.ts             |       0 |      100 |     100 |       0 | 1-21              
+  main.ts                   |       0 |      100 |       0 |       0 | 1-8               
+ src/adapters               |     100 |      100 |     100 |     100 |                   
+  customer-db.adapter.ts    |     100 |      100 |     100 |     100 |                   
+  delivery-db.adapter.ts    |     100 |      100 |     100 |     100 |                   
+  product-db.adapter.ts     |     100 |      100 |     100 |     100 |                   
+  transaction-db.adapter.ts |     100 |      100 |     100 |     100 |                   
+ src/application/services   |   78.75 |    34.61 |     100 |   77.33 |                   
+  api-client.service.ts     |     100 |      100 |     100 |     100 |                   
+  customer.service.ts       |     100 |      100 |     100 |     100 |                   
+  delivery.service.ts       |     100 |      100 |     100 |     100 |                   
+  product.service.ts        |     100 |      100 |     100 |     100 |                   
+  transaction.service.ts    |   63.82 |    19.04 |     100 |   63.04 | 57,108-209        
+ src/controllers            |     100 |      100 |     100 |     100 |                   
+  customer.controller.ts    |     100 |      100 |     100 |     100 |                   
+  delivery.controller.ts    |     100 |      100 |     100 |     100 |                   
+  product.controller.ts     |     100 |      100 |     100 |     100 |                   
+  transaction.controller.ts |     100 |      100 |     100 |     100 |                   
+ src/domain/entities        |     100 |      100 |     100 |     100 |                   
+  customer.entity.ts        |     100 |      100 |     100 |     100 |                   
+  delivery.entity.ts        |     100 |      100 |     100 |     100 |                   
+  product.entity.ts         |     100 |      100 |     100 |     100 |                   
+  transaction.entity.ts     |     100 |      100 |     100 |     100 |                   
+ src/modules                |   17.39 |      100 |     100 |   16.66 |                   
+  customer.module.ts        |       0 |      100 |     100 |       0 | 1-12              
+  delivery.module.ts        |       0 |      100 |     100 |       0 | 1-12              
+  dynamodb.module.ts        |     100 |      100 |     100 |     100 |                   
+  product.module.ts         |       0 |      100 |     100 |       0 | 1-12              
+  transaction.module.ts     |       0 |      100 |     100 |       0 | 1-26              
+ src/test                   |       0 |      100 |       0 |       0 |                   
+  app.e2e-spec.ts           |       0 |      100 |       0 |       0 | 1-19              
+ src/utils                  |   61.53 |        0 |      80 |   66.66 |                   
+  result.ts                 |   61.53 |        0 |      80 |   66.66 | 10,24-27          
+
 
 ## Diseño del modelo de datos
 
