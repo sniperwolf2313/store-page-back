@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
+import { firstValueFrom } from 'rxjs';
 import { env } from 'process';
 
 @Injectable()
@@ -10,58 +10,85 @@ export class PayService {
   readonly private_key = env.PRIVATE_KEY;
   constructor(private readonly httpService: HttpService) {}
 
-  async getTokenMerchant(): Promise<AxiosResponse> {
+  async getTokenMerchant(): Promise<any> {
     const url = `${this.api_url}/merchants/${this.public_key}`;
-    const response = await this.httpService.get(url).toPromise();
-    return response.data;
+    try {
+      const response = await firstValueFrom(this.httpService.get(url));
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching merchant token:', error);
+      throw error;
+    }
   }
 
-  async getTokenCard(cardData: any): Promise<AxiosResponse> {
+  async getTokenCard(cardData: any): Promise<any> {
     const url = `${this.api_url}/tokens/cards`;
-    const response = await this.httpService
-      .post(url, cardData, {
-        headers: {
-          Authorization: `Bearer ${this.public_key}`,
-        },
-      })
-      .toPromise();
-    return response.data;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, cardData, {
+          headers: {
+            Authorization: `Bearer ${this.public_key}`,
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching token card:', error);
+      throw error;
+    }
   }
 
-  async getPaymentSource(paymentSourceData: any): Promise<AxiosResponse> {
+  async getPaymentSource(paymentSourceData: any): Promise<any> {
     const url = `${this.api_url}/payment_sources`;
-
-    const response = await this.httpService
-      .post(url, paymentSourceData, {
-        headers: {
-          Authorization: `Bearer ${this.private_key}`,
-        },
-      })
-      .toPromise();
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, paymentSourceData, {
+          headers: {
+            Authorization: `Bearer ${this.private_key}`,
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching payment source:', error);
+      throw error;
+    }
   }
 
-  async createTransaction(transactionData: any): Promise<AxiosResponse> {
+  async createTransaction(transactionData: any): Promise<any> {
     const url = `${this.api_url}/transactions`;
-    const response = await this.httpService
-      .post(url, transactionData, {
-        headers: {
-          Authorization: `Bearer ${this.private_key}`,
-        },
-      })
-      .toPromise();
-    return response.data;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, transactionData, {
+          headers: {
+            Authorization: `Bearer ${this.private_key}`,
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      throw error;
+    }
   }
 
-  async getStatus(transactionId: string): Promise<AxiosResponse> {
+  async getStatus(transactionId: string): Promise<any> {
     const url = `${this.api_url}/transactions/${transactionId}`;
-    const response = await this.httpService
-      .get(url, {
-        headers: {
-          Authorization: `Bearer ${this.private_key}`,
-        },
-      })
-      .toPromise();
-    return response.data;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          headers: {
+            Authorization: `Bearer ${this.private_key}`,
+          },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching transaction status:', error);
+      throw error;
+    }
   }
 }
