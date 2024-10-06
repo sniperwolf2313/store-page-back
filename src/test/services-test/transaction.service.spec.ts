@@ -4,11 +4,11 @@ import { TransactionDbAdapter } from '../../adapters/transaction-db.adapter';
 import { PayService } from '../../application/services/api-client.service';
 import { CustomerService } from '../../application/services/customer.service';
 import { DeliveryService } from '../../application/services/delivery.service';
-import { DynamoDBModule } from '../../modules/dynamodb.module';
-import { HttpModule } from '@nestjs/axios';
 import { AxiosResponse } from 'axios';
 import { Result } from '../../utils/result';
 import { Transaction } from '../../domain/entities/transaction.entity';
+import { Customer } from '../../domain/entities/customer.entity';
+import { Delivery } from '../../domain/entities/delivery.entity';
 
 jest.mock('../../adapters/transaction-db.adapter');
 jest.mock('../../application/services/api-client.service');
@@ -24,13 +24,33 @@ describe('TransactionService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [DynamoDBModule, HttpModule],
       providers: [
         TransactionService,
-        TransactionDbAdapter,
-        PayService,
-        CustomerService,
-        DeliveryService,
+        {
+          provide: TransactionDbAdapter,
+          useValue: {
+            createTransactionDB: jest.fn(),
+            updateTransactionDB: jest.fn(),
+          },
+        },
+        {
+          provide: PayService,
+          useValue: {
+            createTransaction: jest.fn(),
+          },
+        },
+        {
+          provide: CustomerService,
+          useValue: {
+            createCustomerDB: jest.fn(),
+          },
+        },
+        {
+          provide: DeliveryService,
+          useValue: {
+            createDeliveryDB: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -360,110 +380,83 @@ describe('TransactionService', () => {
   });
 
   describe('createTransaction', () => {
-    it('should create a transaction and return the status', async () => {
+    it('should create a transaction successfully', async () => {
       const transactionData = {
         amount_in_cents: 1000,
-        expiration_time: '2024-12-31',
         currency: 'USD',
-      };
-      const responseData = {
-        id: 'txn-123',
-        reference: 'ref-123',
-        amount_in_cents: 1000,
-        currency: 'USD',
-        customer_data: {
-          legal_id: 'cust-123',
-          legal_id_type: 'ID',
-          full_name: 'John Doe',
-          phone_number: '1234567890',
-        },
-        customer_email: 'test@example.com',
-        payment_method: 'CARD',
-        status: 'PENDING',
-        shipping_address: '123 Shipping St',
-      };
-      const transactionResult = {
-        transactionId: 'txn-123',
-        reference: 'ref-123',
-        amountInCents: 1000,
-        currency: 'USD',
-        customerId: 'cust-123',
-        customerEmail: 'test@example.com',
-        paymentMethod: 'CARD',
-        status: 'PENDING',
+        expiration_time: Date.now() + 3600 * 1000, // 1 hour later
+        customer_data: { legal_id: '12345' },
+        customer_email: 'customer@example.com',
+        payment_method: 'CREDIT_CARD',
+        shipping_address: {},
       };
 
+      const mockedPayResponse = { data: { id: 'transaction-id' } };
+      jest.spyOn(payService, 'createTransaction').mockResolvedValue({
+        data: mockedPayResponse.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {
+          headers: undefined,
+        },
+      });
       jest
-        .spyOn(service, 'createTransactionDB')
-        .mockResolvedValue(Result.ok(transactionResult));
-      jest.spyOn(service, 'getStatus').mockResolvedValue(Result.ok('PENDING'));
+        .spyOn(transactionDbAdapter, 'createTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
       jest
-        .spyOn(service, 'updateTransactionDB')
-        .mockResolvedValue(Result.ok(transactionResult));
-      jest.spyOn(customerService, 'createCustomerDB').mockResolvedValue(
-        Result.ok({
-          customerId: 'cust-123',
-          idType: 'ID',
-          name: 'John Doe',
-          email: 'test@example.com',
-          phone_number: '1234567890',
-          deliveryAddress: '123 Shipping St',
-        }),
-      );
-      jest.spyOn(deliveryService, 'createDeliveryDB').mockResolvedValue(
-        Result.ok({
-          deliveryId: 'txn-123',
-          shippingData: '123 Shipping St',
-          status: 'PENDING',
-        }),
-      );
+        .spyOn(transactionDbAdapter, 'updateTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
+      jest
+        .spyOn(customerService, 'createCustomerDB')
+        .mockResolvedValue(Result.ok(new Customer()));
+      jest
+        .spyOn(deliveryService, 'createDeliveryDB')
+        .mockResolvedValue(Result.ok(new Delivery()));
 
       const result = await service.createTransaction(transactionData);
 
-      expect(service.createTransactionDB).toHaveBeenCalledWith({
-        transactionId: responseData.id,
-        reference: responseData.reference,
-        amountInCents: responseData.amount_in_cents,
-        currency: responseData.currency,
-        customerId: responseData.customer_data.legal_id,
-        customerEmail: responseData.customer_email,
-        paymentMethod: responseData.payment_method,
-        status: responseData.status,
-      });
       expect(result.isSuccess).toBe(true);
-      expect(result.value).toEqual('PENDING');
+      expect(result.value).toBe('OK');
     });
 
-    it('should return an error if transaction DB creation fails', async () => {
+    it('should fail if response data is missing', async () => {
       const transactionData = {
-        amount_in_cents: 1000,
-        expiration_time: '2024-12-31',
-        currency: 'USD',
+        /* ...data... */
       };
+      jest.spyOn(payService, 'createTransaction').mockResolvedValue({
+        data: null,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {
+          headers: undefined,
+        },
+      }); // Simulate no data
 
+      const result = await service.createTransaction(transactionData);
+
+      expect(result.isSuccess).toBe(false);
+      expect(result.error).toEqual(new Error('Response data is missing'));
+    });
+
+    it('should fail to save transaction to DB', async () => {
+      const transactionData = {
+        /* ...data... */
+      };
+      const mockedPayResponse = { data: { id: 'transaction-id' } };
+      jest.spyOn(payService, 'createTransaction').mockResolvedValue({
+        data: mockedPayResponse.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {
+          headers: undefined,
+        },
+      });
       jest
-        .spyOn(service, 'createTransactionDB')
-        .mockResolvedValue(
-          Result.fail(new Error('Failed to create transaction DB entry')),
-        );
-      jest.spyOn(service, 'getStatus').mockResolvedValue(Result.ok('PENDING'));
-      jest.spyOn(customerService, 'createCustomerDB').mockResolvedValue(
-        Result.ok({
-          customerId: 'cust-123',
-          idType: 'ID',
-          name: 'John Doe',
-          email: 'test@example.com',
-          phone_number: '1234567890',
-          deliveryAddress: '123 Shipping St',
-        }),
-      );
-      jest.spyOn(deliveryService, 'createDeliveryDB').mockResolvedValue(
-        Result.ok({
-          deliveryId: 'txn-123',
-          shippingData: '123 Shipping St',
-          status: 'PENDING',
-        }),
-      );
+        .spyOn(transactionDbAdapter, 'createTransactionDB')
+        .mockResolvedValue(Result.fail(new Error('DB Error')));
 
       const result = await service.createTransaction(transactionData);
 
@@ -473,54 +466,100 @@ describe('TransactionService', () => {
       );
     });
 
-    it('should return an error if status retrieval fails', async () => {
+    it('should poll transaction status and handle completion', async () => {
       const transactionData = {
         amount_in_cents: 1000,
-        expiration_time: '2024-12-31',
         currency: 'USD',
+        expiration_time: Date.now() + 3600 * 1000,
+        customer_data: { legal_id: '12345' },
+        customer_email: 'customer@example.com',
+        payment_method: 'CREDIT_CARD',
+        shipping_address: {},
       };
 
-      jest.spyOn(service, 'createTransactionDB').mockResolvedValue(
-        Result.ok({
-          transactionId: 'txn-123',
-          reference: 'ref-123',
-          amountInCents: 1000,
-          currency: 'USD',
-          customerId: 'cust-123',
-          customerEmail: 'test@example.com',
-          paymentMethod: 'CARD',
-          status: 'PENDING',
-        }),
-      );
+      const mockedPayResponse = { data: { id: 'transaction-id' } };
+      jest.spyOn(payService, 'createTransaction').mockResolvedValue({
+        data: mockedPayResponse.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {
+          headers: undefined,
+        },
+      });
       jest
-        .spyOn(service, 'getStatus')
-        .mockResolvedValue(
-          Result.fail(new Error('Failed to retrieve transaction status')),
-        );
-      jest.spyOn(customerService, 'createCustomerDB').mockResolvedValue(
-        Result.ok({
-          customerId: 'cust-123',
-          idType: 'ID',
-          name: 'John Doe',
-          email: 'test@example.com',
-          phone_number: '1234567890',
-          deliveryAddress: '123 Shipping St',
-        }),
-      );
-      jest.spyOn(deliveryService, 'createDeliveryDB').mockResolvedValue(
-        Result.ok({
-          deliveryId: 'txn-123',
-          shippingData: '123 Shipping St',
-          status: 'PENDING',
-        }),
-      );
+        .spyOn(transactionDbAdapter, 'createTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
+      jest
+        .spyOn(transactionDbAdapter, 'updateTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
+      jest
+        .spyOn(customerService, 'createCustomerDB')
+        .mockResolvedValue(Result.ok(new Customer()));
+      jest
+        .spyOn(deliveryService, 'createDeliveryDB')
+        .mockResolvedValue(Result.ok(new Delivery()));
+
+      // Simulate transaction status polling
+      jest
+        .spyOn(service as any, 'pollTransactionStatus')
+        .mockResolvedValue('COMPLETED');
+
+      const result = await service.createTransaction(transactionData);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toBe('Completed');
+    });
+
+    it('should mark transaction as error if status is PENDING', async () => {
+      const transactionData = {
+        amount_in_cents: 1000,
+        currency: 'USD',
+        expiration_time: Date.now() + 3600 * 1000,
+        customer_data: { legal_id: '12345' },
+        customer_email: 'customer@example.com',
+        payment_method: 'CREDIT_CARD',
+        shipping_address: {},
+      };
+
+      const mockedPayResponse = { data: { id: 'transaction-id' } };
+      jest.spyOn(payService, 'createTransaction').mockResolvedValue({
+        data: mockedPayResponse.data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {
+          headers: undefined,
+        },
+      });
+      jest
+        .spyOn(transactionDbAdapter, 'createTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
+      jest
+        .spyOn(service as any, 'pollTransactionStatus')
+        .mockResolvedValue('PENDING');
+      jest
+        .spyOn(transactionDbAdapter, 'updateTransactionDB')
+        .mockResolvedValue(Result.ok(new Transaction()));
+
+      const result = await service.createTransaction(transactionData);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toBe('ERROR');
+    });
+
+    it('should return fail when error occurs', async () => {
+      const transactionData = {
+        /* ...data... */
+      };
+      jest.spyOn(payService, 'createTransaction').mockImplementation(() => {
+        throw new Error('Some error');
+      });
 
       const result = await service.createTransaction(transactionData);
 
       expect(result.isSuccess).toBe(false);
-      expect(result.error).toEqual(
-        new Error('Failed to retrieve transaction status'),
-      );
+      expect(result.error).toEqual(new Error('Some error'));
     });
   });
 });
